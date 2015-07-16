@@ -39,14 +39,6 @@
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
-#ifdef NM_VPNC_NEW
-#include <NetworkManager.h>
-
-#define VPNC_PLUGIN_UI_ERROR                  NM_CONNECTION_ERROR
-#define VPNC_PLUGIN_UI_ERROR_FAILED           NM_CONNECTION_ERROR_FAILED
-#define VPNC_PLUGIN_UI_ERROR_INVALID_PROPERTY NM_CONNECTION_ERROR_INVALID_PROPERTY
-#endif
-
 #ifdef NM_VPNC_OLD
 #include <nm-setting-vpn.h>
 #include <nm-setting-connection.h>
@@ -68,6 +60,14 @@
 #define VPNC_PLUGIN_UI_ERROR                  NM_SETTING_VPN_ERROR
 #define VPNC_PLUGIN_UI_ERROR_FAILED           NM_SETTING_VPN_ERROR_UNKNOWN
 #define VPNC_PLUGIN_UI_ERROR_INVALID_PROPERTY NM_SETTING_VPN_ERROR_INVALID_PROPERTY
+
+#else /* !NM_VPNC_OLD */
+
+#include <NetworkManager.h>
+
+#define VPNC_PLUGIN_UI_ERROR                  NM_CONNECTION_ERROR
+#define VPNC_PLUGIN_UI_ERROR_FAILED           NM_CONNECTION_ERROR_FAILED
+#define VPNC_PLUGIN_UI_ERROR_INVALID_PROPERTY NM_CONNECTION_ERROR_INVALID_PROPERTY
 #endif
 
 #include "nm-vpnc-service-defines.h"
@@ -1172,11 +1172,11 @@ add_routes (NMSettingIPConfig *s_ip4, const char *routelist)
 	for (i = 0; substrs[i] != NULL; i++) {
 		char *p, *str_route;
 		long int prefix = 32;
-#ifdef NM_VPNC_NEW
+#ifdef NM_VPNC_OLD
+		struct in_addr tmp;
+#else
 		NMIPRoute *route;
 		GError *error = NULL;
-#else
-		struct in_addr tmp;
 #endif
 
 		str_route = g_strdup (substrs[i]);
@@ -1194,16 +1194,7 @@ add_routes (NMSettingIPConfig *s_ip4, const char *routelist)
 		}
 		*p = '\0';
 
-#ifdef NM_VPNC_NEW
-		route = nm_ip_route_new (AF_INET, str_route, prefix, NULL, -1, &error);
-		if (route) {
-			nm_setting_ip_config_add_route (s_ip4, route);
-			nm_ip_route_unref (route);
-		} else {
-			g_warning ("Ignoring invalid route '%s': %s", str_route, error->message);
-			g_clear_error (&error);
-		}
-#else
+#ifdef NM_VPNC_OLD
 		if (inet_pton (AF_INET, str_route, &tmp) > 0) {
 			NMIP4Route *route = nm_ip4_route_new ();
 
@@ -1213,6 +1204,15 @@ add_routes (NMSettingIPConfig *s_ip4, const char *routelist)
 			nm_setting_ip_config_add_route (s_ip4, route);
 		} else
 			g_warning ("Ignoring invalid route '%s'", str_route);
+#else
+		route = nm_ip_route_new (AF_INET, str_route, prefix, NULL, -1, &error);
+		if (route) {
+			nm_setting_ip_config_add_route (s_ip4, route);
+			nm_ip_route_unref (route);
+		} else {
+			g_warning ("Ignoring invalid route '%s': %s", str_route, error->message);
+			g_clear_error (&error);
+		}
 #endif
 
 next:
@@ -1745,24 +1745,24 @@ export (NMVpnEditorPlugin *plugin,
 		int i;
 
 		for (i = 0; i < nm_setting_ip_config_get_num_routes (s_ip4); i++) {
-#ifdef NM_VPNC_NEW
-			NMIPRoute *route = nm_setting_ip_config_get_route (s_ip4, i);
-#else
+#ifdef NM_VPNC_OLD
 			NMIP4Route *route = nm_setting_ip_config_get_route (s_ip4, i);
 			char str_addr[INET_ADDRSTRLEN + 1];
 			struct in_addr num_addr;
+#else
+			NMIPRoute *route = nm_setting_ip_config_get_route (s_ip4, i);
 #endif
 
 			if (routes_count)
 				g_string_append_c (routes, ' ');
-#ifdef NM_VPNC_NEW
-			g_string_append_printf (routes, "%s/%d",
-			                        nm_ip_route_get_dest (route),
-			                        nm_ip_route_get_prefix (route));
-#else
+#ifdef NM_VPNC_OLD
 			num_addr.s_addr = nm_ip4_route_get_dest (route);
 			if (inet_ntop (AF_INET, &num_addr, &str_addr[0], INET_ADDRSTRLEN + 1))
 				g_string_append_printf (routes, "%s/%d", str_addr, nm_ip4_route_get_prefix (route));
+#else
+			g_string_append_printf (routes, "%s/%d",
+			                        nm_ip_route_get_dest (route),
+			                        nm_ip_route_get_prefix (route));
 #endif
 
 			routes_count++;
