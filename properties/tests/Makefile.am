@@ -16,7 +16,7 @@ test_import_export_LDADD = \
 	$(GTK_LIBS) \
 	$(DBUS_LIBS) \
 	$(NM_LIBS) \
-	$(top_builddir)/properties/libnm-vpnc-properties.la
+	$(top_builddir)/properties/libnm-vpnc-properties-old.la
 
 if WITH_TESTS
 
