@@ -1084,14 +1084,13 @@ nm_vpnc_plugin_class_init (NMVPNCPluginClass *vpnc_class)
 }
 
 NMVPNCPlugin *
-nm_vpnc_plugin_new (void)
+nm_vpnc_plugin_new (const char *bus_name)
 {
 	NMVPNCPlugin *plugin;
 	GError *error = NULL;
 
 	plugin = (NMVPNCPlugin *) g_initable_new (NM_TYPE_VPNC_PLUGIN, NULL, &error,
-	                                          NM_VPN_SERVICE_PLUGIN_DBUS_SERVICE_NAME,
-	                                          NM_DBUS_SERVICE_VPNC,
+	                                          NM_VPN_SERVICE_PLUGIN_DBUS_SERVICE_NAME, bus_name,
 	                                          NULL);
 	if (!plugin) {
 		g_warning ("Failed to initialize a plugin instance: %s", error->message);
@@ -1164,10 +1163,12 @@ main (int argc, char *argv[])
 	NMVPNCPlugin *plugin;
 	gboolean persist = FALSE;
 	GOptionContext *opt_ctx = NULL;
+	gchar *bus_name;
 
 	GOptionEntry options[] = {
 		{ "persist", 0, 0, G_OPTION_ARG_NONE, &persist, N_("Don't quit when VPN connection terminates"), NULL },
 		{ "debug", 0, 0, G_OPTION_ARG_NONE, &debug, N_("Enable verbose debug logging (may expose passwords)"), NULL },
+		{ "bus-name", 0, 0, G_OPTION_ARG_STRING, &bus_name, N_("DBus name to use for this instance"), NULL },
 		{NULL}
 	};
 
@@ -1209,7 +1210,7 @@ main (int argc, char *argv[])
 	if (system ("/sbin/modprobe tun") == -1)
 		exit (EXIT_FAILURE);
 
-	plugin = nm_vpnc_plugin_new ();
+	plugin = nm_vpnc_plugin_new (bus_name);
 	if (!plugin)
 		exit (EXIT_FAILURE);
 
