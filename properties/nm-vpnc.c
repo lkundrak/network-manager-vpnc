@@ -834,7 +834,7 @@ update_connection (NMVpnEditor *editor,
 	s_con = nm_connection_get_setting_connection (connection);
 
 	s_vpn = NM_SETTING_VPN (nm_setting_vpn_new ());
-	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_DBUS_SERVICE_VPNC, NULL);
+	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPNC_SERVICE_TYPE, NULL);
 
 	/* Interface name */
 	widget = GTK_WIDGET (gtk_builder_get_object (priv->builder, "interface_name_entry"));
@@ -1289,7 +1289,7 @@ import (NMVpnEditorPlugin *plugin, const char *path, GError **error)
 	nm_connection_add_setting (connection, NM_SETTING (s_con));
 
 	s_vpn = NM_SETTING_VPN (nm_setting_vpn_new ());
-	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_DBUS_SERVICE_VPNC, NULL);
+	g_object_set (s_vpn, NM_SETTING_VPN_SERVICE_TYPE, NM_VPNC_SERVICE_TYPE, NULL);
 	nm_connection_add_setting (connection, NM_SETTING (s_vpn));
 
 	s_ip4 = NM_SETTING_IP_CONFIG (nm_setting_ip4_config_new ());

@@ -1163,7 +1163,7 @@ main (int argc, char *argv[])
 	NMVPNCPlugin *plugin;
 	gboolean persist = FALSE;
 	GOptionContext *opt_ctx = NULL;
-	gchar *bus_name;
+	gchar *bus_name = NM_DBUS_SERVICE_VPNC;
 
 	GOptionEntry options[] = {
 		{ "persist", 0, 0, G_OPTION_ARG_NONE, &persist, N_("Don't quit when VPN connection terminates"), NULL },

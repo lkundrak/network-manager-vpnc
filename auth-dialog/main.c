@@ -472,8 +472,8 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
-	if (strcmp (vpn_service, NM_DBUS_SERVICE_VPNC) != 0) {
-		fprintf (stderr, "This dialog only works with the '%s' service\n", NM_DBUS_SERVICE_VPNC);
+	if (strcmp (vpn_service, NM_VPNC_SERVICE_TYPE) != 0) {
+		fprintf (stderr, "This dialog only works with the '%s' service\n", NM_VPNC_SERVICE_TYPE);
 		return 1;
 	}
 
